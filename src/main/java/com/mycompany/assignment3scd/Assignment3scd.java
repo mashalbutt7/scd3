@@ -6,6 +6,7 @@ package com.mycompany.assignment3scd;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -13,9 +14,12 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.DefaultCellEditor;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -29,18 +33,8 @@ import javax.swing.table.TableCellRenderer;
  *
  * @author mashalbutt
  */
-public class Assignment3scd {
-
-
-/**
- *
- * @author mashalbutt
- */
-
-
-
-
-
+public class Assignment3scd
+{
 
     private final JFrame frame;
     private JTable table = null;
@@ -72,20 +66,21 @@ public class Assignment3scd {
         {
             File f = new File(filePath);
             Scanner file = new Scanner(f);
-            while (file.hasNextLine()) {
+            while (file.hasNextLine()) 
+            {
                 String line = file.nextLine();
                 String[] p = line.split(",");
-                int idd = Integer.parseInt(p[0]);
-                String title = p[1];
-                if (idd == 1) 
-                {
-                    String author = p[2];
-                    int year = Integer.parseInt(p[3]);
-                    int pc = Integer.parseInt(p[4]);
-                    int cost = Integer.parseInt(p[5]);
-                    Object[] rowData = {title, author, year, pc, cost};
+               // int idd = Integer.parseInt(p[0]);
+                String title = p[0];
+               // if (idd == 1) 
+              //  {
+                    String author = p[1];
+                    int year = Integer.parseInt(p[2]);
+//                    int pc = Integer.parseInt(p[4]);
+//                    int cost = Integer.parseInt(p[5]);
+                    Object[] rowData = {title, author, year};
                     tableModel.addRow(rowData);
-                }
+              //  }
             }
             file.close();
         } catch (FileNotFoundException e) 
@@ -113,53 +108,213 @@ public class Assignment3scd {
         {
             @Override
             public void actionPerformed(ActionEvent e) 
-            {
+           {
                 Object[] rowData = new Object[columnNames.length];
-                for (int i = 0; i < columnNames.length - 1; i++) 
-                {
-                    String userInput = JOptionPane.showInputDialog(null, "Enter " + columnNames[i] + ":");
-                    if (userInput != null) 
-                    {
-                        rowData[i] = userInput;
-                    } else
-                    {
-                        JOptionPane.showMessageDialog(null, "You canceled the input dialog.");
-                        return;
-                    }
-                }
+            
+                JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(3, 2)); 
+        JTextField field1 = new JTextField(10);
+        JTextField field2 = new JTextField(10);
+        JTextField field3 = new JTextField(10);
+        panel.add(new JLabel("Name of the book:"));
+        panel.add(field1);
+        panel.add(new JLabel("Author of the book:"));
+        panel.add(field2);
+         panel.add(new JLabel("Publishing Year of the book:"));
+        panel.add(field3);
+        int result = JOptionPane.showConfirmDialog(null, panel, "Add a book",
+                JOptionPane.OK_CANCEL_OPTION);
 
-                tableModel.addRow(rowData);
+        if (result == JOptionPane.OK_OPTION) 
+        {
+            String name = field1.getText();
+            String author = field2.getText();
+            String year=field3.getText();
+            rowData[0]=name;
+            rowData[1]=author;
+            rowData[2]=year;
+             tableModel.addRow(rowData);
 
-                try (FileWriter writer = new FileWriter("data.txt", true))
-                {
-                    String newItemData = String.format("1,%s,%s,%d,%d,%d%n", rowData[0], rowData[1],
-                            Integer.parseInt(rowData[2].toString()), Integer.parseInt(rowData[3].toString()),
-                            Integer.parseInt(rowData[4].toString()));
-                    writer.write(newItemData);
-                } 
+    
+        
+        
+               
+
+               try (FileWriter writer = new FileWriter("data.txt", true)) 
+               {
+    String newItemData = String.format("%s,%s,%d%n", rowData[0], rowData[1],
+            Integer.parseInt(rowData[2].toString()));
+    
+    writer.write(newItemData);
+}
+
                 catch (IOException ex)
                 {
                     ex.printStackTrace();
                 }
-            }
-        });
+            
+        } 
+        else 
+        {
+            JOptionPane.showMessageDialog(null,  "You canceled the add book dialog box"
+                );
+        }}  });
 
         deleteButton.addActionListener(new ActionListener() 
         {
+            
             @Override
-            public void actionPerformed(ActionEvent e) {
-               
-            }
-        });
+            public void actionPerformed(ActionEvent e)
+            {
+                String msg = JOptionPane.showInputDialog(null, "Enter the name of the book you want to delete:", "Delete a book", JOptionPane.QUESTION_MESSAGE);
+                if(msg!=null)
+                {
+                  int column = 0;
+                  boolean found = false; 
+                   Object cellValue;
+                   int count=0;
+for (int row = 0; row < tableModel.getRowCount(); row++) 
+{
+    cellValue = tableModel.getValueAt(row, column);
+    if (cellValue != null && cellValue.toString().equals(msg)) 
+    {
+       
+        found = true;
+        break;
+    }
+    count++;
+}
+                
+if (found) 
+{
+   
+    tableModel.removeRow(count);
+    JOptionPane.showMessageDialog(null, "Match found in table and deleted");
+     String filePath = "data.txt";
 
+        
+               
+       try (FileWriter writer = new FileWriter(filePath, false)) {
+    for (int row = 0; row < tableModel.getRowCount(); row++) 
+    {
+        for (int col = 0; col < tableModel.getColumnCount(); col++) 
+        {
+            Object val = tableModel.getValueAt(row, col);
+            if (val != null)
+            {
+                writer.write(val.toString());
+                if (col < tableModel.getColumnCount() - 1)
+                {
+                    writer.write(",");
+                }
+            }
+        }
+        writer.write("\n"); 
+    }
+} catch (IOException ex) {
+    Logger.getLogger(Assignment3scd.class.getName()).log(Level.SEVERE, null, ex);
+}
+       
+}
+else
+{
+    JOptionPane.showMessageDialog(null, "Not found");
+}
+                }
+                
+                else
+                {
+                    JOptionPane.showMessageDialog(null, "You canceled the delete dialog");
+                }
+            }
+             });
+        
         editButton.addActionListener(new ActionListener() 
         {
             @Override
             public void actionPerformed(ActionEvent e) 
             {
+                String msg = JOptionPane.showInputDialog(null, "Enter the name of the book you want to edit:", "Edit a book", JOptionPane.QUESTION_MESSAGE);
+                if(msg!=null)
+                {
+                  int column = 0;
+                  boolean found = false; 
+                   Object cellValue;
+                   int count=0;
+for (int row = 0; row < tableModel.getRowCount(); row++) 
+{
+    cellValue = tableModel.getValueAt(row, column);
+    if (cellValue != null && cellValue.toString().equals(msg)) 
+    {
+       
+        found = true;
+        break;
+    }
+    count++;
+}
+      if (found)
+      {
+           Object[] rowData = new Object[columnNames.length];
+            JPanel panel = new JPanel();
+            panel.setLayout(new GridLayout(3, 2)); 
+            JTextField field1 = new JTextField(10);
+            JTextField field2 = new JTextField(10);
+            JTextField field3 = new JTextField(10);
+            panel.add(new JLabel("New name of the book:"));
+            panel.add(field1);
+            panel.add(new JLabel("New author of the book:"));
+            panel.add(field2);
+            panel.add(new JLabel("New publishing Year of the book:"));
+            panel.add(field3);
+        int result = JOptionPane.showConfirmDialog(null, panel, "Edit a book",
+                JOptionPane.OK_CANCEL_OPTION);
+
+        if (result == JOptionPane.OK_OPTION) 
+        {
+            String name = field1.getText();
+            String author = field2.getText();
+            String year=field3.getText();
+            rowData[0]=name;
+            rowData[1]=author;
+            rowData[2]=year;
+            tableModel.removeRow(count);
+            tableModel.insertRow(count, rowData);
+
+    
+        
+        
                
-            }
-        });
+
+               try (FileWriter writer = new FileWriter("data.txt", false)) 
+               {
+    String newItemData = String.format("1,%s,%s,%d%n", rowData[0], rowData[1],
+            Integer.parseInt(rowData[2].toString()));
+    
+    writer.write(newItemData);
+}
+
+                catch (IOException ex)
+                {
+                    ex.printStackTrace();
+                }
+            
+        } 
+      }
+      else 
+      {
+           JOptionPane.showMessageDialog(null,  "The item is not available"
+                );
+      }
+          
+          
+            
+            } 
+             else 
+        {
+            JOptionPane.showMessageDialog(null,  "You canceled the add book dialog box"
+                );
+        
+      }       } });
 
         bPanel.add(addButton);
         bPanel.add(deleteButton);
