@@ -9,6 +9,8 @@ import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -42,6 +44,7 @@ public class Assignment3scd
     private final JButton addButton;
     private final JButton deleteButton;
     private final JButton editButton;
+    private final JButton popularityCount;
 
     public Assignment3scd() 
     {
@@ -103,6 +106,7 @@ public class Assignment3scd
         addButton = new JButton("Add Item");
         deleteButton = new JButton("Delete Item");
         editButton = new JButton("Edit Item");
+        popularityCount=new JButton("Popularity Count");
 
         addButton.addActionListener(new ActionListener()
         {
@@ -316,9 +320,57 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
         
       }       } });
 
+        popularityCount.addActionListener(new ActionListener ()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                
+            }
+            
+        });
+        MouseListener m=new MouseListener()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) 
+            {
+               
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) 
+            {
+               
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) 
+            {
+                int row = table.rowAtPoint(e.getPoint());
+        if (row >= 0)
+        {
+            table.setRowSelectionInterval(row, row);
+             
+        }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e)
+            {
+               table.clearSelection();
+            }
+        };
         bPanel.add(addButton);
         bPanel.add(deleteButton);
         bPanel.add(editButton);
+        bPanel.add(popularityCount);
+        table.addMouseListener(m);
         frame.add(bPanel, BorderLayout.SOUTH);
         frame.setVisible(true);
     }
