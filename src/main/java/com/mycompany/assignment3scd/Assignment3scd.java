@@ -7,6 +7,7 @@ package com.mycompany.assignment3scd;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridLayout;
+import java.awt.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -30,6 +31,10 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import javax.swing.JCheckBox;
 
 /**
  *
@@ -45,6 +50,8 @@ public class Assignment3scd
     private final JButton deleteButton;
     private final JButton editButton;
     private final JButton popularityCount;
+    private ArrayList <String> li=new ArrayList<>();
+    String s;
 
     public Assignment3scd() 
     {
@@ -64,7 +71,7 @@ public class Assignment3scd
         };
 
         String filePath = "data.txt";
-
+       
         try 
         {
             File f = new File(filePath);
@@ -78,11 +85,14 @@ public class Assignment3scd
                // if (idd == 1) 
               //  {
                     String author = p[1];
+                    s=title;
+                 li.add(title);
                     int year = Integer.parseInt(p[2]);
 //                    int pc = Integer.parseInt(p[4]);
 //                    int cost = Integer.parseInt(p[5]);
                     Object[] rowData = {title, author, year};
                     tableModel.addRow(rowData);
+                  
               //  }
             }
             file.close();
@@ -97,9 +107,15 @@ public class Assignment3scd
         table = new JTable(tableModel);
         table.setShowGrid(true);
         table.getColumnModel().getColumn(3).setCellRenderer(new RenderButtonForTable());
-        table.getColumnModel().getColumn(3).setCellEditor(new ButtonEditorForTable(new JTextField()));
-
-        JScrollPane j = new JScrollPane(table);
+       
+    
+     for (int i = 0; i < li.size(); i++) 
+    {
+        
+        String item = li.get(i);
+        table.getColumnModel().getColumn(3).setCellEditor(new ButtonEditorForTable(new JTextField(),item));
+    
+    }   JScrollPane j = new JScrollPane(table);
         frame.add(j, BorderLayout.CENTER);
 
         JPanel bPanel = new JPanel();
@@ -325,7 +341,8 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                
+                display();
+             //   popularityScreen.setVisible(true);
             }
             
         });
@@ -390,6 +407,79 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
             }
         });
     }
+    public int[] readPopularityDataFromFile() 
+     {
+        String file = "data.txt"; 
+        ArrayList<Integer> popularity = new ArrayList<>();
+         //System.out.println("hi");
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) 
+        {
+            String line;
+            while ((line = reader.readLine()) != null)
+            {
+              //  System.out.println("hiiiii");
+                String[] parts = line.split(",");
+                if (parts.length >= 4)
+                {
+                     int popularityc = Integer.parseInt(parts[3]); 
+                  //  System.out.println("hii");
+                    popularity.add(popularityc);
+                  //  System.out.println(popularityc);
+                }
+            }
+        } catch (IOException e) 
+        {
+            e.printStackTrace();
+        }
+        int[] popularityData = new int[popularity.size()];
+        for (int i = 0; i < popularity.size(); i++) 
+        {
+            popularityData[i] = popularity.get(i);
+        //    System.out.println("haha"+popularityData[i]);
+        }
+        return popularityData;
+    }
+    public void display() 
+    {
+        int[] popularityData = readPopularityDataFromFile(); 
+        String[] bookData=readBookNamesFromFile();
+        if (popularityData != null)
+        {
+            Popularity frame = new Popularity(popularityData,bookData);
+            frame.setVisible(true);
+        }
+        else 
+        {
+           
+            JOptionPane.showMessageDialog(null, "No popularity data available.");
+        }
+    }
+   
+    private String[] readBookNamesFromFile() 
+    {
+        String filePath = "data.txt"; 
+        ArrayList<String> bookNames = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) 
+        {
+            String line;
+            while ((line = reader.readLine()) != null) 
+            {
+                String[] parts = line.split(",");
+                if (parts.length >= 4)
+                {
+                    String bookName = parts[0]; 
+                    bookNames.add(bookName);
+                }
+            }
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        // Convert the list to a string array
+        String[] bookNamesArray = bookNames.toArray(new String[0]);
+        return bookNamesArray;
+    }
 }
 
 class RenderButtonForTable extends JButton implements TableCellRenderer
@@ -411,15 +501,49 @@ class ButtonEditorForTable extends DefaultCellEditor
     private final JButton button;
     private String label;
     private boolean isPushed;
-
-    public ButtonEditorForTable(JTextField textField) 
+   private String bookName;
+  // private ArrayList<String> l=new ArrayList<>();
+    public ButtonEditorForTable(JTextField checkBox,String s) 
     {
-        super(textField);
-        button = new JButton();
-        button.setOpaque(true);
-        button.addActionListener((ActionEvent e) -> 
+    
+        super(checkBox);
+        this.bookName=s;
+         System.out.println("Book name in constructor: " + bookName);
+//     for (int i = 0; i < s.size(); i++) 
+//    {
+//        
+//        String item = s.get(i);
+//        l.add(item);
+//    
+//    }
+        button = new JButton("Read");
+        button.addActionListener(new ActionListener()
         {
-            fireEditingStopped();
+            @Override
+            public void actionPerformed(ActionEvent e) 
+            {
+                // Read the book associated with this row
+                if (ButtonEditorForTable.this.bookName!= null)
+                {
+                   try {
+                  File file = new File(bookName+ ".txt");
+                   System.out.println("File path: " + file.getAbsolutePath()); // Debug line
+    StringBuilder content;
+    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        content = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            content.append(line).append("\n");
+        }
+    }
+    JOptionPane.showMessageDialog(null, content.toString(), "Book Content", JOptionPane.INFORMATION_MESSAGE);
+} catch (IOException ex) {
+    ex.printStackTrace(); // Print the exception to the console for debugging
+    JOptionPane.showMessageDialog(null, "Failed to read the book.", "Error", JOptionPane.ERROR_MESSAGE);
+}
+
+                }
+            }
         });
     }
 
@@ -457,6 +581,7 @@ class ButtonEditorForTable extends DefaultCellEditor
         isPushed = false;
         return super.stopCellEditing();
     }
+     
 }
 
 
