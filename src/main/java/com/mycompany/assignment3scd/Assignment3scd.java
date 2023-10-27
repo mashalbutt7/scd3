@@ -7,11 +7,12 @@ package com.mycompany.assignment3scd;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridLayout;
-import java.awt.List;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -34,7 +35,10 @@ import javax.swing.table.TableCellRenderer;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import javax.swing.JCheckBox;
+import javax.swing.JTextArea;
+
 
 /**
  *
@@ -44,17 +48,17 @@ public class Assignment3scd
 {
 
     private final JFrame frame;
-    private JTable table = null;
+    public JTable table = null;
     private DefaultTableModel tableModel;
     private final JButton addButton;
     private final JButton deleteButton;
     private final JButton editButton;
     private final JButton popularityCount;
-    private ArrayList <String> li=new ArrayList<>();
-      private ArrayList <Integer> pc=new ArrayList<>();
-    String s;
-
-    public Assignment3scd() 
+   // private String content;
+   // private ArrayList <String> li=new ArrayList<>();
+   private static final Map<String,String> c=new HashMap<>();
+   private ArrayList <Integer> pc=new ArrayList<>();
+public Assignment3scd() 
     {
         frame = new JFrame("Library Management System");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -72,7 +76,6 @@ public class Assignment3scd
         };
 
         String filePath = "data.txt";
-       
         try 
         {
             File f = new File(filePath);
@@ -81,27 +84,24 @@ public class Assignment3scd
             {
                 String line = file.nextLine();
                 String[] p = line.split(",");
-               // int idd = Integer.parseInt(p[0]);
                 String title = p[0];
-               // if (idd == 1) 
-              //  {
                     String author = p[1];
-                    s=title;
-                 li.add(title);
                     int year = Integer.parseInt(p[2]);
                     int pct = Integer.parseInt(p[3]);
                     pc.add(pct);
-//                    int cost = Integer.parseInt(p[5]);
+                //  c.put(title, null);
                     Object[] rowData = {title, author, year};
                     tableModel.addRow(rowData);
-                  
-              //  }
+                 
             }
             file.close();
-        } catch (FileNotFoundException e) 
+            
+        } 
+        catch (FileNotFoundException e) 
         {
             System.err.println("File not found: " + filePath);
-        } catch (NumberFormatException g)
+        } 
+        catch (NumberFormatException g)
         {
             System.err.println("");
         }
@@ -109,17 +109,10 @@ public class Assignment3scd
         table = new JTable(tableModel);
         table.setShowGrid(true);
         table.getColumnModel().getColumn(3).setCellRenderer(new RenderButtonForTable());
-       
+        table.getColumnModel().getColumn(3).setCellEditor(new ButtonEditorForTable(new JCheckBox(),table,tableModel,c));
     
-     for (int i = 0; i < li.size(); i++) 
-    {
-        
-        String item = li.get(i);
-        table.getColumnModel().getColumn(3).setCellEditor(new ButtonEditorForTable(new JTextField(),item));
-    
-    }   JScrollPane j = new JScrollPane(table);
+         JScrollPane j = new JScrollPane(table);
         frame.add(j, BorderLayout.CENTER);
-
         JPanel bPanel = new JPanel();
         addButton = new JButton("Add Item");
         deleteButton = new JButton("Delete Item");
@@ -134,33 +127,40 @@ public class Assignment3scd
                 Object[] rowData = new Object[columnNames.length];
             
                 JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(3, 2)); 
-        JTextField field1 = new JTextField(10);
-        JTextField field2 = new JTextField(10);
-        JTextField field3 = new JTextField(10);
-        panel.add(new JLabel("Name of the book:"));
-        panel.add(field1);
-        panel.add(new JLabel("Author of the book:"));
-        panel.add(field2);
-         panel.add(new JLabel("Publishing Year of the book:"));
-        panel.add(field3);
-        int result = JOptionPane.showConfirmDialog(null, panel, "Add a book",
+                panel.setLayout(new GridLayout(4, 2)); 
+                JTextField field1 = new JTextField(10);
+                JTextField field2 = new JTextField(10);
+                JTextField field3 = new JTextField(10);
+                JTextField field4 = new JTextField(30);
+                panel.add(new JLabel("Name of the book:"));
+                panel.add(field1);
+                panel.add(new JLabel("Author of the book:"));
+                panel.add(field2);
+                panel.add(new JLabel("Publishing Year of the book:"));
+                panel.add(field3);
+                panel.add(new JLabel("Enter content for the book:"));
+                panel.add(field4);
+               int result = JOptionPane.showConfirmDialog(null, panel, "Add a book",
                 JOptionPane.OK_CANCEL_OPTION);
-
+       
         if (result == JOptionPane.OK_OPTION) 
         {
             String name = field1.getText();
             String author = field2.getText();
             String year=field3.getText();
+            String cc=field4.getText();
+            System.out.println(cc);
             rowData[0]=name;
             rowData[1]=author;
             rowData[2]=year;
              tableModel.addRow(rowData);
-
-    
-        
-        
-               
+             c.put(name, cc);
+               for (String key : c.keySet()) 
+               {
+            String value = c.get(key);
+            System.out.println("Key: " + key + ", Value: " + value);
+        }
+           
 
                try (FileWriter writer = new FileWriter("data.txt", true)) 
                {
@@ -219,14 +219,18 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
         }
                 JOptionPane.showMessageDialog(null, "Match found in table and deleted");
                 String filePath = "data.txt";
-  try (FileWriter writer = new FileWriter(filePath, false)) {
-    for (int row = 0; row < tableModel.getRowCount(); row++) {
-        for (int col = 0; col < tableModel.getColumnCount(); col++) {
+  try (FileWriter writer = new FileWriter(filePath, false)) 
+  {
+    for (int row = 0; row < tableModel.getRowCount(); row++)
+    {
+        for (int col = 0; col < tableModel.getColumnCount(); col++) 
+        {
             Object val = tableModel.getValueAt(row, col);
             if (val != null) {
                 writer.write(val.toString());
             }
-            if (col < tableModel.getColumnCount() - 2) {
+            if (col < tableModel.getColumnCount() - 2)
+            {
                 writer.write(",");
             }
         }
@@ -275,16 +279,19 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
       {
            Object[] rowData = new Object[columnNames.length];
             JPanel panel = new JPanel();
-            panel.setLayout(new GridLayout(3, 2)); 
+            panel.setLayout(new GridLayout(4, 2)); 
             JTextField field1 = new JTextField(10);
             JTextField field2 = new JTextField(10);
             JTextField field3 = new JTextField(10);
+            JTextField field4 = new JTextField(30);
             panel.add(new JLabel("New name of the book:"));
             panel.add(field1);
             panel.add(new JLabel("New author of the book:"));
             panel.add(field2);
             panel.add(new JLabel("New publishing Year of the book:"));
             panel.add(field3);
+            panel.add(new JLabel("New content of the book:"));
+            panel.add(field4);
         int result = JOptionPane.showConfirmDialog(null, panel, "Edit a book",
                 JOptionPane.OK_CANCEL_OPTION);
 
@@ -293,16 +300,14 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
             String name = field1.getText();
             String author = field2.getText();
             String year=field3.getText();
+            String con=field4.getText();
             rowData[0]=name;
             rowData[1]=author;
             rowData[2]=year;
+           
             tableModel.removeRow(count);
             tableModel.insertRow(count, rowData);
-
-    
-        
-        
-               
+            c.put(name, con);
 
               try (FileWriter writer = new FileWriter(filePath, false)) {
     for (int row = 0; row < tableModel.getRowCount(); row++) {
@@ -357,48 +362,27 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
             }
             
         });
-        MouseListener m=new MouseListener()
-        {
+      table.addMouseMotionListener(new MouseAdapter()
+      {
             @Override
-            public void mouseClicked(MouseEvent e)
-            {
-                
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) 
-            {
-               
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) 
-            {
-               
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) 
+            public void mouseMoved(MouseEvent e)
             {
                 int row = table.rowAtPoint(e.getPoint());
-        if (row >= 0)
-        {
-            table.setRowSelectionInterval(row, row);
-             
-        }
+                if (row >= 0)
+                {
+                    table.getSelectionModel().setSelectionInterval(row, row);
+                }
+                else
+                {
+                    table.getSelectionModel().clearSelection();
+                }
             }
-
-            @Override
-            public void mouseExited(MouseEvent e)
-            {
-               table.clearSelection();
-            }
-        };
+    });
         bPanel.add(addButton);
         bPanel.add(deleteButton);
         bPanel.add(editButton);
         bPanel.add(popularityCount);
-        table.addMouseListener(m);
+     //   table.addMouseListener(m);
         frame.add(bPanel, BorderLayout.SOUTH);
         frame.setVisible(true);
     }
@@ -435,7 +419,7 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
      {
         String file = "data.txt"; 
         ArrayList<Integer> popularity = new ArrayList<>();
-         //System.out.println("hi");
+         System.out.println("hi");
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) 
         {
             String line;
@@ -498,6 +482,7 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
       
        return bookNames;
     }
+   
 }
 
 class RenderButtonForTable extends JButton implements TableCellRenderer
@@ -516,53 +501,176 @@ class RenderButtonForTable extends JButton implements TableCellRenderer
 
 class ButtonEditorForTable extends DefaultCellEditor 
 {
+   
     private final JButton button;
     private String label;
     private boolean isPushed;
-   private String bookName;
-  // private ArrayList<String> l=new ArrayList<>();
-    public ButtonEditorForTable(JTextField checkBox,String s) 
+    public ButtonEditorForTable(JCheckBox checkBox,JTable table, DefaultTableModel tableModel,Map<String,String> c) 
     {
     
         super(checkBox);
-        this.bookName=s;
-         System.out.println("Book name in constructor: " + bookName);
-//     for (int i = 0; i < s.size(); i++) 
-//    {
-//        
-//        String item = s.get(i);
-//        l.add(item);
-//    
-//    }
+    
         button = new JButton("Read");
+     
         button.addActionListener(new ActionListener()
-        {
+        {        
             @Override
             public void actionPerformed(ActionEvent e) 
             {
-                // Read the book associated with this row
-                if (ButtonEditorForTable.this.bookName!= null)
-                {
-                   try {
-                  File file = new File(bookName+ ".txt");
-                   System.out.println("File path: " + file.getAbsolutePath()); // Debug line
-    StringBuilder content;
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-        content = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            content.append(line).append("\n");
-        }
-    }
-    JOptionPane.showMessageDialog(null, content.toString(), "Book Content", JOptionPane.INFORMATION_MESSAGE);
-} catch (IOException ex) {
-    ex.printStackTrace(); // Print the exception to the console for debugging
-    JOptionPane.showMessageDialog(null, "Failed to read the book.", "Error", JOptionPane.ERROR_MESSAGE);
+               int s=table.getRowCount();
+               System.out.println(s);
+               int r = table.getSelectedRow();
+                System.out.println(r);
+               if (r >= 0 && r < tableModel.getRowCount())
+              {
+            String bookTitle = tableModel.getValueAt(r, 0).toString();
+            Map<String, String> resultMap = c;
+            openBookContentWindow(bookTitle, resultMap);
+              } 
+              
+            }
+  public static void openBookContentWindow(String bookTitle,Map<String, String> content)
+ {
+        JFrame bookContentFrame = new JFrame(bookTitle + " - Read Book");
+        JTextArea textArea = new JTextArea(20, 60);
+        textArea.setWrapStyleWord(true);
+        textArea.setLineWrap(true);
+        textArea.setCaretPosition(0);
+        textArea.setEditable(false); 
+        String bookContent = null;
+        JScrollPane scrollPane = new JScrollPane(textArea);
+               
+               if ("To Kill a Mockingbird".equals(bookTitle)) {
+    bookContent = "This is the content of the book titled '" + bookTitle + "'.\n\n" +
+        "Chapter 1: The Early Years\n" +
+        "\n" +
+        "In a small Southern town, young Scout Finch lives with her brother Jem and their father Atticus.\n" +
+        "\n" +
+        "Chapter 2: The Radley Place\n" +
+        "\n" +
+        "The children are fascinated by their reclusive neighbor Boo Radley, whom they have never seen.\n" +
+        "\n" +
+        "Chapter 3: Miss Maudie's House\n" +
+        "\n" +
+        "They befriend a neighbor named Miss Maudie, who helps them understand the town and its people.\n" +
+        "\n" +
+        "Chapter 4: School Days\n" +
+        "\n" +
+        "Scout and Jem begin school and experience the challenges of dealing with their classmates.\n" +
+        "\n" +
+        "Chapter 5: The New Items\n" +
+        "\n" +
+        "Atticus defends Tom Robinson, an African American accused of raping Mayella Ewell.\n\n";
+    content.put(bookTitle, bookContent);
 }
 
+           else if ("The Fault in Our Stars".equals(bookTitle)) {
+    bookContent = "This is the content of the book titled '" + bookTitle + "'.\n\n" +
+        "Chapter 1: Hazel's Story\n" +
+        "\n" +
+        "Hazel Grace Lancaster is a 16-year-old cancer patient who meets Augustus Waters at a support group.\n" +
+        "\n" +
+        "Chapter 2: Augustus's Story\n" +
+        "\n" +
+        "Augustus Waters, an amputee, joins Hazel at the support group. They bond over their favorite books.\n" +
+        "\n" +
+        "Chapter 3: Amsterdam Adventure\n" +
+        "\n" +
+        "Hazel and Augustus travel to Amsterdam to meet their favorite author Peter Van Houten.\n" +
+        "\n" +
+        "Chapter 4: Roller Coaster of Emotions\n" +
+        "\n" +
+        "The relationship between Hazel and Augustus deepens, but they also face the harsh realities of cancer.\n" +
+        "\n" +
+        "Chapter 5: The Fault in Our Stars\n" +
+        "\n" +
+        "Hazel and Augustus come to terms with the imperfections of their lives and the impact they have on others.\n\n";
+    content.put(bookTitle, bookContent);
+}
+
+           else if ("A Walk to Remember".equals(bookTitle)) {
+    bookContent = "This is the content of the book titled '" + bookTitle + "'.\n\n" +
+        "Chapter 1: A Chance Encounter\n" +
+        "\n" +
+        "Landon Carter, a high school student, meets Jamie Sullivan, the minister's daughter.\n" +
+        "\n" +
+        "Chapter 2: A Night to Remember\n" +
+        "\n" +
+        "Landon and Jamie spend time together at a school play and begin to form a connection.\n" +
+        "\n" +
+        "Chapter 3: Revealing a Secret\n" +
+        "\n" +
+        "Jamie confides in Landon, revealing a deep secret, and their relationship deepens.\n" +
+        "\n" +
+        "Chapter 4: Facing Challenges\n" +
+        "\n" +
+        "Landon and Jamie face challenges, but their love for each other helps them overcome adversity.\n" +
+        "\n" +
+        "Chapter 5: A Walk to Remember\n" +
+        "\n" +
+        "The story unfolds, and Landon and Jamie create unforgettable memories during their time together.\n\n";
+    content.put(bookTitle, bookContent);
+}
+           else if ("Pride and Prejudice".equals(bookTitle)) {
+    bookContent = "This is the content of the book titled '" + bookTitle + "'.\n\n" +
+        "Chapter 1: The Bennet Family\n" +
+        "\n" +
+        "Introduces the Bennet family, including Mr. and Mrs. Bennet and their five daughters.\n" +
+        "\n" +
+        "Chapter 2: The Arrival of Mr. Bingley\n" +
+        "\n" +
+        "A wealthy bachelor, Mr. Bingley, moves to the neighborhood, creating excitement among the Bennet daughters.\n" +
+        "\n" +
+        "Chapter 3: The Pride of Mr. Darcy\n" +
+        "\n" +
+        "Mr. Darcy, a wealthy and reserved man, is introduced, and his pride becomes evident.\n" +
+        "\n" +
+        "Chapter 4: The Dance at Netherfield\n" +
+        "\n" +
+        "A social event at Mr. Bingley's residence brings the Bennet family into contact with new acquaintances.\n" +
+        "\n" +
+        "Chapter 5: The Proposal\n" +
+        "\n" +
+        "Various proposals and misunderstandings occur, affecting the relationships of the characters.\n\n";
+    content.put(bookTitle, bookContent);
+}
+
+else 
+{
+    bookContent = "This is the content of the book titled '" + bookTitle + "'.\n\n" +
+            content.get(bookTitle);
+}
+
+                
+        textArea.setText(bookContent);
+        bookContentFrame.add(scrollPane);
+        bookContentFrame.pack();
+        bookContentFrame.setVisible(true);
+        bookContentFrame.addWindowListener(new WindowAdapter() 
+        {
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+                int confirm = JOptionPane.showOptionDialog(
+                        bookContentFrame, "Are you sure you want to close this book?", "Confirmation", JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE, null, null, null);
+
+                if (confirm == JOptionPane.YES_OPTION) 
+                {
+                    bookContentFrame.dispose();
+                } 
+                else if (confirm == JOptionPane.NO_OPTION)
+                {
+                   Map<String, String> resultMap = content;
+                    openBookContentWindow(bookTitle,resultMap);
+                    // Do nothing, bookContentFrame will remain open
                 }
             }
         });
+    }
+           
+        });
+  
     }
 
     @Override
