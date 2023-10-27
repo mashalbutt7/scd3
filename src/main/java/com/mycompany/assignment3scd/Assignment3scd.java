@@ -51,6 +51,7 @@ public class Assignment3scd
     private final JButton editButton;
     private final JButton popularityCount;
     private ArrayList <String> li=new ArrayList<>();
+      private ArrayList <Integer> pc=new ArrayList<>();
     String s;
 
     public Assignment3scd() 
@@ -88,7 +89,8 @@ public class Assignment3scd
                     s=title;
                  li.add(title);
                     int year = Integer.parseInt(p[2]);
-//                    int pc = Integer.parseInt(p[4]);
+                    int pct = Integer.parseInt(p[3]);
+                    pc.add(pct);
 //                    int cost = Integer.parseInt(p[5]);
                     Object[] rowData = {title, author, year};
                     tableModel.addRow(rowData);
@@ -162,11 +164,12 @@ public class Assignment3scd
 
                try (FileWriter writer = new FileWriter("data.txt", true)) 
                {
-    String newItemData = String.format("%s,%s,%d%n", rowData[0], rowData[1],
-            Integer.parseInt(rowData[2].toString()));
+    String newItemData = String.format("%s,%s,%d,%d%n", rowData[0], rowData[1],
+            Integer.parseInt(rowData[2].toString()),10);
     
     writer.write(newItemData);
-}
+     pc.add(10);
+}  
 
                 catch (IOException ex)
                 {
@@ -203,51 +206,47 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
         break;
     }
     count++;
-}
-                
-if (found) 
-{
-   
-    tableModel.removeRow(count);
-    JOptionPane.showMessageDialog(null, "Match found in table and deleted");
-     String filePath = "data.txt";
+      }
 
-        
+            if (found) {
                
-       try (FileWriter writer = new FileWriter(filePath, false)) {
-    for (int row = 0; row < tableModel.getRowCount(); row++) 
-    {
-        for (int col = 0; col < tableModel.getColumnCount(); col++) 
+                tableModel.removeRow(count);
+                pc.remove(count);
+                  for (int i=0;i<pc.size();i++) 
         {
+            Integer it=pc.get(i);
+            System.out.println(it);
+        }
+                JOptionPane.showMessageDialog(null, "Match found in table and deleted");
+                String filePath = "data.txt";
+  try (FileWriter writer = new FileWriter(filePath, false)) {
+    for (int row = 0; row < tableModel.getRowCount(); row++) {
+        for (int col = 0; col < tableModel.getColumnCount(); col++) {
             Object val = tableModel.getValueAt(row, col);
-            if (val != null)
-            {
+            if (val != null) {
                 writer.write(val.toString());
-                if (col < tableModel.getColumnCount() - 1)
-                {
-                    writer.write(",");
-                }
+            }
+            if (col < tableModel.getColumnCount() - 2) {
+                writer.write(",");
             }
         }
-        writer.write("\n"); 
+        int popularityValue = getPopularityValueForRow(row); 
+        writer.write("," + popularityValue); 
+        writer.write("\n");
     }
-} catch (IOException ex) {
-    Logger.getLogger(Assignment3scd.class.getName()).log(Level.SEVERE, null, ex);
 }
-       
-}
-else
-{
-    JOptionPane.showMessageDialog(null, "Not found");
-}
-                }
-                
-                else
+ catch (IOException ex)
                 {
-                    JOptionPane.showMessageDialog(null, "You canceled the delete dialog");
+                    Logger.getLogger(Assignment3scd.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }
-             });
+            } else {
+                JOptionPane.showMessageDialog(null, "Not found");
+          }
+        } else {
+            JOptionPane.showMessageDialog(null, "You canceled the delete dialog");
+        }
+    }
+});
         
         editButton.addActionListener(new ActionListener() 
         {
@@ -305,20 +304,32 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
         
                
 
-               try (FileWriter writer = new FileWriter("data.txt", false)) 
-               {
-    String newItemData = String.format("1,%s,%s,%d%n", rowData[0], rowData[1],
-            Integer.parseInt(rowData[2].toString()));
-    
-    writer.write(newItemData);
+              try (FileWriter writer = new FileWriter(filePath, false)) {
+    for (int row = 0; row < tableModel.getRowCount(); row++) {
+        for (int col = 0; col < tableModel.getColumnCount(); col++) {
+            Object val = tableModel.getValueAt(row, col);
+            if (val != null) {
+                writer.write(val.toString());
+            }
+            if (col < tableModel.getColumnCount() - 2) {
+                writer.write(",");
+            }
+        }
+        int popularityValue = getPopularityValueForRow(row); 
+        writer.write("," + popularityValue); 
+        writer.write("\n");
+    }
 }
-
-                catch (IOException ex)
+ catch (IOException ex)
                 {
-                    ex.printStackTrace();
+                    Logger.getLogger(Assignment3scd.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            
-        } 
+            } 
+        
+          else {
+                JOptionPane.showMessageDialog(null, "Not found");
+          }  
+        
       }
       else 
       {
@@ -326,7 +337,7 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
                 );
       }
           
-          
+             
             
             } 
              else 
@@ -407,7 +418,20 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
             }
         });
     }
-    public int[] readPopularityDataFromFile() 
+    private int getPopularityValueForRow(int row)
+    {
+     
+        if (row >= 0 && row < pc.size())
+        {
+            return pc.get(row);
+        } 
+        else 
+        {
+            return 0; 
+        }
+    }
+
+    public ArrayList<Integer> readPopularityDataFromFile() 
      {
         String file = "data.txt"; 
         ArrayList<Integer> popularity = new ArrayList<>();
@@ -417,32 +441,27 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
             String line;
             while ((line = reader.readLine()) != null)
             {
-              //  System.out.println("hiiiii");
+                System.out.println("hiiiii");
                 String[] parts = line.split(",");
                 if (parts.length >= 4)
                 {
                      int popularityc = Integer.parseInt(parts[3]); 
-                  //  System.out.println("hii");
+                   System.out.println("hii");
                     popularity.add(popularityc);
-                  //  System.out.println(popularityc);
+                   System.out.println(popularityc);
                 }
             }
         } catch (IOException e) 
         {
             e.printStackTrace();
         }
-        int[] popularityData = new int[popularity.size()];
-        for (int i = 0; i < popularity.size(); i++) 
-        {
-            popularityData[i] = popularity.get(i);
-        //    System.out.println("haha"+popularityData[i]);
-        }
-        return popularityData;
+       
+        return popularity;
     }
     public void display() 
     {
-        int[] popularityData = readPopularityDataFromFile(); 
-        String[] bookData=readBookNamesFromFile();
+        ArrayList<Integer> popularityData = readPopularityDataFromFile(); 
+        ArrayList<String> bookData=readBookNamesFromFile();
         if (popularityData != null)
         {
             Popularity frame = new Popularity(popularityData,bookData);
@@ -455,7 +474,7 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
         }
     }
    
-    private String[] readBookNamesFromFile() 
+    private ArrayList<String> readBookNamesFromFile() 
     {
         String filePath = "data.txt"; 
         ArrayList<String> bookNames = new ArrayList<>();
@@ -476,9 +495,8 @@ for (int row = 0; row < tableModel.getRowCount(); row++)
         {
             e.printStackTrace();
         }
-        // Convert the list to a string array
-        String[] bookNamesArray = bookNames.toArray(new String[0]);
-        return bookNamesArray;
+      
+       return bookNames;
     }
 }
 

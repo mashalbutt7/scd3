@@ -8,18 +8,18 @@ package com.mycompany.assignment3scd;
  *
  * @author mashalbutt
  */
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Arc2D;
+import java.util.List;
+import java.awt.Color;
+import java.util.ArrayList;
 
-class Popularity extends JFrame 
-{
-    private final int[] data;
-    private final String[] labels;
+public class Popularity extends JFrame {
+    private final List<Integer> data;
+    private final List<String> labels;
 
-    public Popularity(int[] data, String[] labels)
-    {
+    public Popularity(List<Integer> data, List<String> labels) {
         this.data = data;
         this.labels = labels;
 
@@ -27,14 +27,20 @@ class Popularity extends JFrame
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
-        add(new PieChartPanel());
+        add(new PieChartPanel(data, labels));
     }
 
-    class PieChartPanel extends JPanel
-    {
+    static class PieChartPanel extends JPanel {
+        private final List<Integer> data;
+        private final List<String> labels;
+
+        PieChartPanel(List<Integer> data, List<String> labels) {
+            this.data = data;
+            this.labels = labels;
+        }
+
         @Override
-        protected void paintComponent(Graphics g)
-        {
+        protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g;
             int width = getWidth();
@@ -43,38 +49,40 @@ class Popularity extends JFrame
             int cy = height / 2;
             int radius = Math.min(width, height) / 2 - 20;
 
-            double total = 0.0;
-            for (int value : data) 
-            {
-                total += value;
-            }
+            double total = data.stream().mapToDouble(Integer::doubleValue).sum();
 
             double startAngle = 0.0;
-            for (int i = 0; i < data.length; i++)
-            {
-                double extent = 360.0 * (data[i] / total);
-                g2.setColor(getColorForIndex(i));
+            for (int i = 0; i < data.size(); i++) {
+                double extent = 360.0 * (data.get(i) / total);
+                g2.setColor(getColorForIndex(i, data.size()));
                 g2.fill(new Arc2D.Double(cx - radius, cy - radius, 2 * radius, 2 * radius, startAngle, extent, Arc2D.PIE));
                 startAngle += extent;
             }
 
-          //labels
+            // Draw labels
             int legendX = cx + radius + 20;
             int legendY = cy - radius;
             int lineHeight = 20;
-            for (int i = 0; i < labels.length; i++)
-            {
-                g2.setColor(getColorForIndex(i));
+            for (int i = 0; i < labels.size(); i++) {
+                g2.setColor(getColorForIndex(i, data.size()));
                 g2.fillRect(legendX, legendY + i * lineHeight, 10, 10);
                 g2.setColor(Color.BLACK);
-                g2.drawString(labels[i], legendX + 20, legendY + i * lineHeight + 10);
+                g2.drawString(labels.get(i), legendX + 20, legendY + i * lineHeight + 10);
             }
         }
 
-        private Color getColorForIndex(int index)
-        {
-            Color[] colors = {Color.RED, Color.GREEN, Color.BLUE, Color.ORANGE, Color.MAGENTA,Color.GRAY};
-            return colors[index % colors.length];
+        private Color getColorForIndex(int index, int totalColors) {
+            float hue = (float) index / totalColors;
+            return Color.getHSBColor(hue, 1, 1);
         }
+    }
+
+    public static void main(String[] args) {
+        List<Integer> data = List.of(10, 20, 10, 15, 5);
+        List<String> labels = List.of("Item 1", "Item 2", "Item 3", "Item 4", "Item 5");
+        SwingUtilities.invokeLater(() -> {
+            Popularity popularity = new Popularity(data, labels);
+            popularity.setVisible(true);
+        });
     }
 }
